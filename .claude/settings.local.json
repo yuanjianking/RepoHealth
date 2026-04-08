@@ -112,7 +112,8 @@
       "Bash(tee backend.log)",
       "Bash(time curl:*)",
       "Bash(curl -v -X POST http://localhost:8000/api/v1/webhook -H 'Content-Type: application/json' -H 'X-GitHub-Event: issues' -d '{:*)",
-      "Bash(curl -v -X POST http://localhost:8000/api/v1/webhook/webhook -H 'Content-Type: application/json' -H 'X-GitHub-Event: issues' -d '{:*)"
+      "Bash(curl -v -X POST http://localhost:8000/api/v1/webhook/webhook -H 'Content-Type: application/json' -H 'X-GitHub-Event: issues' -d '{:*)",
+      "Bash(python3 -c \"import json, sys; data=json.loads\\(sys.stdin.read\\(\\)\\); print\\('Keys:', list\\(data.keys\\(\\)\\)\\); print\\('Has riskAnalysis?', 'riskAnalysis' in data.get\\('data', {}\\)\\); print\\('Risk level:', data.get\\('data', {}\\).get\\('riskAnalysis', {}\\).get\\('overall_risk_level', 'N/A'\\)\\)\")"
     ],
     "additionalDirectories": [
       "/tmp"
