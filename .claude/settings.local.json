@@ -101,7 +101,18 @@
       "Bash(node -e ':*)",
       "Bash(python3 -c \"import sys, json; data=json.load\\(sys.stdin\\); print\\('Overall risk level:', data.get\\('overall_risk_level'\\)\\); print\\('Risks count:', len\\(data.get\\('risks', []\\)\\)\\)\")",
       "Bash(curl -s http://localhost:8000/api/v1/repo/health/example/repo)",
-      "Bash(python3 -c \"import sys, json; data=json.load\\(sys.stdin\\); print\\('API响应正常:', data.get\\('repository'\\)\\)\")"
+      "Bash(python3 -c \"import sys, json; data=json.load\\(sys.stdin\\); print\\('API响应正常:', data.get\\('repository'\\)\\)\")",
+      "Bash(.venv/bin/pytest tests/test_repo_endpoints.py -v -x)",
+      "Bash(.venv/bin/pytest tests/test_storage_service.py -v -x)",
+      "Bash(.venv/bin/pytest tests/test_repo_event_processor.py -v -x)",
+      "Bash(.venv/bin/pytest tests/ -v -x)",
+      "Bash(ls -la .env*)",
+      "Bash(netstat -tulpn)",
+      "Bash(kill 6211)",
+      "Bash(tee backend.log)",
+      "Bash(time curl:*)",
+      "Bash(curl -v -X POST http://localhost:8000/api/v1/webhook -H 'Content-Type: application/json' -H 'X-GitHub-Event: issues' -d '{:*)",
+      "Bash(curl -v -X POST http://localhost:8000/api/v1/webhook/webhook -H 'Content-Type: application/json' -H 'X-GitHub-Event: issues' -d '{:*)"
     ],
     "additionalDirectories": [
       "/tmp"

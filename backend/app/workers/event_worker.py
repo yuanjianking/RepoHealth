@@ -6,6 +6,7 @@ from app.services.event_history_service import EventHistoryService
 from app.services.event_queue import RepoEvent, RepoEventQueue
 from app.services.repo_event_service import RepoEventProcessor
 from app.services.storage_service import StorageService
+from app.services.ai_service import get_ai_service
 
 logger = get_logger()
 
@@ -15,13 +16,13 @@ async def run_event_worker(
     history_service: EventHistoryService,
     queue: RepoEventQueue,
 ) -> None:
-    processor = RepoEventProcessor(storage, history_service)
+    processor = RepoEventProcessor(storage, history_service, get_ai_service())
 
     while True:
         try:
             event = await queue.dequeue()
             try:
-                processor.process_event(event.repository, event.event_type, event.payload)
+                await processor.process_event(event.repository, event.event_type, event.payload)
             except Exception as exc:
                 logger.error(f"Event worker failed to process event: {exc}")
             finally:

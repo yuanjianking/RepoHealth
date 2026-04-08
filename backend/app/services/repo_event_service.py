@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from app.services.event_history_service import EventHistoryService
 from app.services.storage_service import StorageService
+from app.services.ai_service import get_ai_service
 
 
 def _utc_now() -> datetime:
@@ -27,18 +28,19 @@ def _format_timestamp(value: datetime) -> str:
 class RepoEventProcessor:
     DELAY_DAYS = 7
 
-    def __init__(self, storage: StorageService, history_service: EventHistoryService):
+    def __init__(self, storage: StorageService, history_service: EventHistoryService, ai_service=None):
         self.storage = storage
         self.history = history_service
+        self.ai_service = ai_service or get_ai_service()
 
-    def process_event(self, repository: str, event_type: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_event(self, repository: str, event_type: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         if event_type == 'ping':
             return {'message': 'pong'}
 
         self.history.append_event(repository, event_type, payload)
 
         state = self._build_state_from_history(repository)
-        dashboard_record = self._build_dashboard_record(repository, state)
+        dashboard_record = await self._build_dashboard_record(repository, state)
         self.storage.save_dashboard_data(repository, dashboard_record)
 
         return dashboard_record
@@ -303,11 +305,19 @@ class RepoEventProcessor:
 
         return sorted(members, key=lambda item: (-item['totalPRs'], -item['totalIssues'], item['name']))
 
-    def _build_dashboard_record(self, repository: str, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _build_dashboard_record(self, repository: str, state: Dict[str, Any]) -> Dict[str, Any]:
         now = _utc_now()
         project_health = self._build_project_health(state)
         code_health = self._build_code_health(state)
         team_work = self._build_team_work(state)
+
+        # Generate AI-powered risk analysis
+        project_data = {
+            'projectHealth': project_health,
+            'codeHealth': code_health,
+            'teamWork': team_work,
+        }
+        risk_analysis = await self.ai_service.analyze_project_health(project_data)
 
         return {
             'id': str(uuid4()),
@@ -315,6 +325,7 @@ class RepoEventProcessor:
                 'projectHealth': project_health,
                 'codeHealth': code_health,
                 'teamWork': team_work,
+                'riskAnalysis': risk_analysis,
             },
             'created_at': _format_timestamp(now),
             'updated_at': _format_timestamp(now),

@@ -12,11 +12,6 @@ from app.core.utils import (
     parse_timestamp,
     utc_now,
 )
-from app.services.ai_service import get_ai_service
-
-
-
-
 class StorageService:
     def __init__(self, data_root: Path | None = None):
         if data_root is None:
@@ -51,81 +46,17 @@ class StorageService:
     def _read_last_jsonl_record(self, file_path: Path) -> Optional[Dict[str, Any]]:
         """
         Read the last valid JSON record from a JSONL file.
-
-        This reads the file from the end to find the last non-empty line,
-        which is more efficient for large files.
         """
         try:
-            with file_path.open('rb') as f:
-                # Go to the end of the file
-                f.seek(0, 2)  # 2 = SEEK_END
-                file_size = f.tell()
-
-                # If file is empty
-                if file_size == 0:
+            with file_path.open('r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f if line.strip()]
+                if not lines:
                     return None
-
-                # Start from the end, looking for the last newline
-                buffer_size = 1024
-                position = file_size
-                # Skip trailing newline if present
-                f.seek(-1, 2)  # Go to last byte
-                if f.read(1) == b'\n':
-                    position -= 1  # Skip the trailing newline
-
-                last_line = b""
-
-                while position > 0:
-                    # Calculate how much to read
-                    read_size = min(buffer_size, position)
-                    position -= read_size
-                    f.seek(position)
-                    chunk = f.read(read_size)
-
-                    # Search for newline from the end of chunk
-                    if b'\n' in chunk:
-                        # Split by newline
-                        lines = chunk.split(b'\n')
-                        # The last element might be partial (part of a line)
-                        if last_line:
-                            lines[-1] = last_line + lines[-1]
-
-                        # Now find the last complete line
-                        # Start from the second last element (since the last might be partial)
-                        for i in range(len(lines) - 2, -1, -1):
-                            line = lines[i].strip()
-                            if line:
-                                try:
-                                    return json.loads(line.decode('utf-8'))
-                                except (json.JSONDecodeError, UnicodeDecodeError):
-                                    # This might be a partial line, continue accumulating
-                                    # Save the partial line and continue searching backwards
-                                    last_line = b'\n'.join(lines[i:])
-                                    break
-                        else:
-                            # No non-empty line found in this chunk
-                            # Save the partial line and continue
-                            last_line = lines[-1] if lines else b""
-                            continue
-
-                        break  # Found a line and returned or saved partial line
-                    else:
-                        # No newline in this chunk, prepend to last_line
-                        last_line = chunk + last_line
-
-                # If we've read the entire file and found no newline (single line file)
-                if last_line:
-                    last_line = last_line.strip()
-                    if last_line:
-                        try:
-                            return json.loads(last_line.decode('utf-8'))
-                        except (json.JSONDecodeError, UnicodeDecodeError):
-                            pass
-        except (OSError, IOError):
-            # File might not exist or permission error
-            pass
-
-        return None
+                last_line = lines[-1]
+                return json.loads(last_line)
+        except (json.JSONDecodeError, OSError, IOError):
+            # File might not exist, permission error, or invalid JSON
+            return None
 
     def load_repository_state(self, repository: str) -> Dict[str, Any]:
         state_file = self._get_state_file(repository)
@@ -179,74 +110,9 @@ class StorageService:
                 }
             ]
 
-        logger = logging.getLogger(__name__)
-
-        try:
-            # Get AI service for analysis
-            ai_service = get_ai_service()
-
-            # Generate AI-powered risk analysis
-            ai_analysis = await ai_service.analyze_project_health(data)
-
-            # Ensure we have the expected structure
-            risk_analysis_data = {
-                'overall_risk_level': ai_analysis.get('overall_risk_level', 'unknown'),
-                'risks': ai_analysis.get('risks', []),
-                'mitigations': ai_analysis.get('mitigations', []),
-                'analysis_method': ai_analysis.get('analysis_method', 'ai'),
-                'analysis_summary': ai_analysis.get('analysis_summary', ''),
-            }
-
-            logger.info(f"Generated AI risk analysis for {repository}: {risk_analysis_data['overall_risk_level']} risk level")
-
-            return [
-                {
-                    'data': risk_analysis_data,
-                    'updated_at': dashboard_record.get('updated_at', ''),
-                }
-            ]
-
-        except Exception as e:
-            logger.error(f"AI analysis failed for {repository}: {e}")
-            # Fallback to simple rule-based analysis
-            project_health = data.get('projectHealth', {})
-            overall_delay_rate = project_health.get('overallDelayRate', 0.0)
-            quality_score = project_health.get('qualityScore', 0.0)
-
-            if overall_delay_rate > 20 or quality_score < 50:
-                overall_risk_level = 'high'
-            elif overall_delay_rate > 10 or quality_score < 70:
-                overall_risk_level = 'medium'
-            else:
-                overall_risk_level = 'low'
-
-            risks = [
-                {
-                    'title': 'Team workload imbalance',
-                    'probability': 'high' if overall_delay_rate > 15 else 'medium',
-                    'impact': 'high' if quality_score < 70 else 'medium',
-                    'description': 'Evaluate task distribution and address delayed work items.',
-                }
-            ]
-
-            mitigations = [
-                {'action': 'Improve PR review cadence'},
-                {'action': 'Reduce issue backlog and prioritize delayed tasks'},
-                {'action': 'Monitor team workload and adjust assignments'},
-            ]
-
-            return [
-                {
-                    'data': {
-                        'overall_risk_level': overall_risk_level,
-                        'risks': risks,
-                        'mitigations': mitigations,
-                        'analysis_method': 'rule_based_fallback',
-                        'analysis_summary': 'Fallback rule-based analysis (AI failed)',
-                    },
-                    'updated_at': dashboard_record.get('updated_at', ''),
-                }
-            ]
+        # No risk analysis found in dashboard data
+        # Return empty list, which will cause the API endpoint to return placeholder data
+        return []
 
 
 async def get_storage_service() -> StorageService:

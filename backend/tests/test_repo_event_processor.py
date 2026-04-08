@@ -1,15 +1,30 @@
 import json
 from pathlib import Path
+from unittest.mock import AsyncMock
+
+import pytest
 
 from app.services.event_history_service import EventHistoryService
 from app.services.repo_event_service import RepoEventProcessor
 from app.services.storage_service import StorageService
 
 
-def test_repo_event_processor_generates_dashboard_from_history(tmp_path: Path):
+@pytest.mark.asyncio
+async def test_repo_event_processor_generates_dashboard_from_history(tmp_path: Path):
     storage = StorageService(data_root=tmp_path)
     history_service = EventHistoryService(data_root=tmp_path)
-    processor = RepoEventProcessor(storage, history_service)
+
+    # Mock AI service that returns a simple risk analysis
+    mock_ai_service = AsyncMock()
+    mock_ai_service.analyze_project_health.return_value = {
+        'overall_risk_level': 'low',
+        'risks': [],
+        'mitigations': [],
+        'analysis_method': 'mock',
+        'analysis_summary': 'Mock analysis for testing',
+    }
+
+    processor = RepoEventProcessor(storage, history_service, ai_service=mock_ai_service)
     repository = "example/repo"
 
     issue_payload = {
@@ -40,8 +55,8 @@ def test_repo_event_processor_generates_dashboard_from_history(tmp_path: Path):
         },
     }
 
-    processor.process_event(repository, "issues", issue_payload)
-    processor.process_event(repository, "pull_request", pr_payload)
+    await processor.process_event(repository, "issues", issue_payload)
+    await processor.process_event(repository, "pull_request", pr_payload)
 
     dashboard_file = tmp_path / "example_repo" / "dashboard.jsonl"
     assert dashboard_file.exists()
@@ -55,3 +70,6 @@ def test_repo_event_processor_generates_dashboard_from_history(tmp_path: Path):
     assert latest_record["data"]["projectHealth"]["totalPRs"] == 1
     assert latest_record["data"]["teamWork"]
     assert latest_record["data"]["codeHealth"]["unmergedPRs"] == 1
+    # Verify risk analysis is included
+    assert "riskAnalysis" in latest_record["data"]
+    assert latest_record["data"]["riskAnalysis"]["overall_risk_level"] == "low"
