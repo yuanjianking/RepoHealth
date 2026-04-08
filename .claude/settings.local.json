@@ -85,7 +85,9 @@
       "Bash(.venv/bin/python /tmp/debug_api.py)",
       "Bash(.venv/bin/python /tmp/test_risk.py)",
       "Bash(.venv/bin/python -m pytest tests/ -xvs)",
-      "Bash(.venv/bin/python -m pytest tests/ -x)"
+      "Bash(.venv/bin/python -m pytest tests/ -x)",
+      "Bash(.venv/bin/python -m py_compile app/api/v1/endpoints/webhook.py)",
+      "Bash(netstat -tlnp)"
     ],
     "additionalDirectories": [
       "/tmp"
