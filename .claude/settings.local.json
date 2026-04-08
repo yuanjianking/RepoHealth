@@ -97,7 +97,11 @@
       "Bash(curl -s http://localhost:8000/api/v1/repo/health/yuanjianking/RepoHealth)",
       "Bash(curl -s http://localhost:5174)",
       "Bash(pkill -f \"vite\")",
-      "Bash(.venv/bin/python -c ':*)"
+      "Bash(.venv/bin/python -c ':*)",
+      "Bash(node -e ':*)",
+      "Bash(python3 -c \"import sys, json; data=json.load\\(sys.stdin\\); print\\('Overall risk level:', data.get\\('overall_risk_level'\\)\\); print\\('Risks count:', len\\(data.get\\('risks', []\\)\\)\\)\")",
+      "Bash(curl -s http://localhost:8000/api/v1/repo/health/example/repo)",
+      "Bash(python3 -c \"import sys, json; data=json.load\\(sys.stdin\\); print\\('API响应正常:', data.get\\('repository'\\)\\)\")"
     ],
     "additionalDirectories": [
       "/tmp"

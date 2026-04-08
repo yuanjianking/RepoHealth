@@ -14,12 +14,46 @@ const apiClient = axios.create({
 });
 
 const isNetworkError = (error: unknown): boolean => {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'request' in error &&
-    !('response' in error)
-  );
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const axiosError = error as Record<string, unknown>;
+
+  // Check for standard Axios network error patterns
+  const hasRequest = 'request' in axiosError;
+  const hasResponse = 'response' in axiosError;
+  const errorCode = axiosError.code as string | undefined;
+
+  // Network error: request made but no response received
+  if (hasRequest && !hasResponse) {
+    return true;
+  }
+
+  // Check for specific network error codes
+  if (errorCode) {
+    const networkErrorCodes = [
+      'ERR_NETWORK',
+      'ECONNABORTED', // Connection aborted (timeout)
+      'ECONNRESET',   // Connection reset
+      'ETIMEDOUT',    // Connection timed out
+    ];
+    return networkErrorCodes.includes(errorCode);
+  }
+
+  // Check error message for network-related keywords
+  const errorMessage = (axiosError.message as string || '').toLowerCase();
+  const networkKeywords = [
+    'network',
+    'connection',
+    'timeout',
+    'aborted',
+    'reset',
+    'failed',
+    'refused',
+  ];
+
+  return networkKeywords.some(keyword => errorMessage.includes(keyword));
 };
 
 const safeGet = async <T>(url: string): Promise<AxiosResponse<T> | null> => {
@@ -52,7 +86,30 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.response?.status, error.response?.data);
+    // Enhanced error logging with more context
+    if (error.response) {
+      // Server responded with error status
+      console.error('API Error:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.response.data,
+        headers: error.response.headers,
+      });
+    } else if (error.request) {
+      // Request was made but no response received (network error)
+      console.error('Network Error:', {
+        code: error.code,
+        message: error.message,
+        url: error.config?.url,
+        method: error.config?.method,
+        timeout: error.config?.timeout,
+      });
+    } else {
+      // Error occurred in request configuration
+      console.error('Request Configuration Error:', error.message);
+    }
 
     // Handle specific error cases
     if (error.response?.status === 401) {
@@ -71,6 +128,9 @@ apiClient.interceptors.response.use(
     } else if (error.response?.status >= 500) {
       // Server error
       console.error('Server error occurred');
+    } else if (!error.response && error.request) {
+      // Network error (no response received)
+      console.error('Network connection error - check if backend server is running');
     }
 
     return Promise.reject(error);

@@ -3,6 +3,10 @@ import { devtools, persist } from 'zustand/middleware';
 import { repoApi } from '../services/api';
 import type { CodeHealth, ProjectHealth, TeamWork, RiskAnalysis } from '../types';
 
+// Default repository configuration from environment variables
+const DEFAULT_OWNER = import.meta.env.VITE_DEFAULT_OWNER || 'example';
+const DEFAULT_REPO = import.meta.env.VITE_DEFAULT_REPO || 'repo';
+
 interface DashboardState {
   // Dashboard data
   projectHealth: ProjectHealth | null;
@@ -41,10 +45,10 @@ const useDashboardStore = create<DashboardState>()(
 
             // Fetch all data in parallel using fixed repository
             const [healthRes, codeRes, teamRes, riskRes] = await Promise.all([
-              repoApi.getHealthOverview('example', 'repo'),
-              repoApi.getCodeHealth('example', 'repo'),
-              repoApi.getTeamWork('example', 'repo'),
-              repoApi.getRiskAnalysis('example', 'repo'),
+              repoApi.getHealthOverview(DEFAULT_OWNER, DEFAULT_REPO),
+              repoApi.getCodeHealth(DEFAULT_OWNER, DEFAULT_REPO),
+              repoApi.getTeamWork(DEFAULT_OWNER, DEFAULT_REPO),
+              repoApi.getRiskAnalysis(DEFAULT_OWNER, DEFAULT_REPO),
             ]);
 
             set({
