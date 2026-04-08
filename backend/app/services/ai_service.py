@@ -112,61 +112,63 @@ class AIService:
         code_health = analysis_data['code_health']
         team_work = analysis_data['team_work']
 
-        prompt = f"""You are a senior software engineering manager analyzing repository health metrics.
-        Please provide a comprehensive risk analysis based on the following project data:
+        prompt = f"""你是一位资深的软件工程经理，正在分析代码仓库的健康指标。
+        请基于以下项目数据提供全面的风险分析：
 
-        ## PROJECT HEALTH METRICS:
-        - Total Issues: {project_health['total_issues']}
-        - Completed Issues: {project_health['completed_issues']}
-        - Pending Issues: {project_health['pending_issues']}
-        - Delayed Issues: {project_health['delayed_issues']}
-        - Overall Delay Rate: {project_health['overall_delay_rate']:.1f}%
-        - Quality Score: {project_health['quality_score']:.1f}/100
-        - Saturation Score: {project_health['saturation_score']:.1f}/100
-        - Days Since First Issue: {project_health['days_since_first_issue']}
+        ## 项目健康指标:
+        - 总问题数: {project_health['total_issues']}
+        - 已完成问题: {project_health['completed_issues']}
+        - 待处理问题: {project_health['pending_issues']}
+        - 延迟问题: {project_health['delayed_issues']}
+        - 整体延迟率: {project_health['overall_delay_rate']:.1f}%
+        - 质量分数: {project_health['quality_score']:.1f}/100
+        - 饱和度分数: {project_health['saturation_score']:.1f}/100
+        - 自首个问题以来的天数: {project_health['days_since_first_issue']}
 
-        ## CODE HEALTH METRICS:
-        - Total PRs: {project_health['total_prs']}
-        - Merged PRs: {project_health['merged_prs']}
-        - Open PRs: {project_health['open_prs']}
-        - PRs in Review: {project_health['in_review_prs']}
-        - Average Comments per PR: {project_health['average_comment_frequency']:.1f}
-        - Unmerged PRs: {code_health['unmerged_prs']}
-        - Commit Frequency: {code_health['commit_frequency']} commits/week
-        - Single Contributor %: {code_health['single_contributor_percentage']:.1f}%
+        ## 代码健康指标:
+        - 总PR数: {project_health['total_prs']}
+        - 已合并PR: {project_health['merged_prs']}
+        - 开放PR: {project_health['open_prs']}
+        - 审查中PR: {project_health['in_review_prs']}
+        - PR平均评论数: {project_health['average_comment_frequency']:.1f}
+        - 未合并PR: {code_health['unmerged_prs']}
+        - 提交频率: {code_health['commit_frequency']} 次/周
+        - 单一贡献者百分比: {code_health['single_contributor_percentage']:.1f}%
 
-        ## TEAM METRICS:
-        - Team Members: {team_work['member_count']}
-        - Team Average Delay Rate: {team_work['team_average_delay_rate']:.1f}%
+        ## 团队指标:
+        - 团队成员: {team_work['member_count']}
+        - 团队平均延迟率: {team_work['team_average_delay_rate']:.1f}%
         - Team Quality Score: {team_work['team_quality_score']:.1f}/100
         - Team Saturation Score: {team_work['team_saturation_score']:.1f}/100
 
-        Please analyze this data and provide:
-        1. An overall risk level (low, medium, high, critical)
-        2. 1-4 specific risks with probability (low, medium, high) and impact (low, medium, high)
-        3. 2-4 practical mitigation strategies
+        请分析这些数据并提供：
+        1. 整体风险等级（low, medium, high, critical）
+        2. 1-4个具体风险，包括概率（low, medium, high）和影响（low, medium, high）
+        3. 2-4个实用的缓解策略
 
-        Format your response as JSON with this exact structure:
+        重要：请用中文回答。所有文本内容包括标题、描述和摘要必须是中文。
+
+        请以JSON格式响应，使用以下确切结构：
         {{
             "overall_risk_level": "low|medium|high|critical",
             "risks": [
                 {{
-                    "title": "Risk title",
+                    "title": "风险标题",
                     "probability": "low|medium|high",
                     "impact": "low|medium|high",
-                    "description": "Detailed risk description"
+                    "description": "详细风险描述"
                 }}
             ],
             "mitigations": [
                 {{
-                    "action": "Specific mitigation action"
+                    "action": "具体缓解措施"
                 }}
             ],
-            "analysis_summary": "Brief summary of the analysis"
+            "analysis_summary": "分析简要总结"
         }}
 
-        Focus on software engineering best practices, team productivity, code quality, and project management.
-        Be realistic and actionable. If all metrics look healthy, still provide a baseline analysis with low risks.
+        重点关注软件工程最佳实践、团队生产力、代码质量和项目管理。
+        要现实和可操作。如果所有指标看起来健康，仍要提供基准分析，包括低风险。
         """
 
         return prompt
@@ -180,7 +182,7 @@ class AIService:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a software engineering expert specializing in project health and risk analysis."},
+                    {"role": "system", "content": "你是一位软件工程专家，专门从事项目健康和风险分析。请用中文回答所有问题。"},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.3,
