@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/home/ubuntu/RepoHealth/frontend/.husky"
+    ],
+    "allow": [
+      "Bash(npm test:*)"
+    ]
+  }
+}

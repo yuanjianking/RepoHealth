@@ -1,0 +1,146 @@
+.health-overview {
+  padding: 24px;
+  height: 100%;
+}
+
+.card-header {
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+}
+
+.card-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.overview-content {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.overall-score {
+  flex-shrink: 0;
+}
+
+.score-circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.score-circle svg {
+  display: block;
+}
+
+.score-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.score-label {
+  position: absolute;
+  top: calc(50% + 30px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.metrics-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+.metric-item {
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.metric-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-value .value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.metric-bar {
+  height: 8px;
+  background: #e8e8e8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.metric-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .overview-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 30px;
+  }
+
+  .overall-score {
+    align-self: center;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .health-overview {
+    padding: 20px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .score-circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .score-value {
+    font-size: 28px;
+  }
+
+  .score-label {
+    top: calc(50% + 25px);
+  }
+}

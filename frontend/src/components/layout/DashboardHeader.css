@@ -1,0 +1,182 @@
+.dashboard-header {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.project-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 5px 0;
+}
+
+.project-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+}
+
+.config-btn {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.config-btn:hover {
+  background: #e8e8e8;
+  border-color: #bfbfbf;
+}
+
+.config-btn:active {
+  background: #d9d9d9;
+}
+
+.config-icon {
+  font-size: 16px;
+}
+
+.config-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  width: 300px;
+  z-index: 1000;
+  border: 1px solid #e8e8e8;
+}
+
+.config-field {
+  margin-bottom: 15px;
+}
+
+.config-label {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.config-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.config-input:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.config-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.save-btn {
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+}
+
+.save-btn:hover {
+  background: #40a9ff;
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+}
+
+.cancel-btn:hover {
+  background: #e8e8e8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+    padding: 20px;
+  }
+
+  .header-right {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .config-panel {
+    width: 280px;
+    right: 0;
+    left: 0;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding: 15px;
+  }
+
+  .header-right {
+    gap: 15px;
+  }
+
+  .config-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .config-panel {
+    width: 260px;
+    padding: 15px;
+  }
+}

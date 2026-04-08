@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DashboardHeader > matches snapshot 1`] = `
+<div>
+  <header
+    class="dashboard-header"
+  >
+    <div
+      class="header-left"
+    >
+      <h1
+        class="project-name"
+      >
+        Test Project
+      </h1>
+      <p
+        class="project-subtitle"
+      >
+        健康监控系统
+      </p>
+    </div>
+    <div
+      class="header-right"
+    />
+  </header>
+</div>
+`;

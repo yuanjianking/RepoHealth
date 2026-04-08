@@ -1,0 +1,59 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DashboardPage > matches snapshot 1`] = `
+<div>
+  <div
+    class="dashboard-page"
+  >
+    <div
+      data-testid="dashboard-header"
+    >
+      DashboardHeader
+    </div>
+    <div
+      class="dashboard-content"
+    >
+      <div
+        class="dashboard-grid"
+      >
+        <div
+          class="grid-item full-width"
+        >
+          <div
+            data-testid="health-overview"
+          >
+            HealthOverview
+          </div>
+        </div>
+        <div
+          class="grid-item"
+        >
+          <div
+            data-testid="code-health"
+          >
+            CodeHealth
+          </div>
+        </div>
+        <div
+          class="grid-item"
+        >
+          <div
+            data-testid="team-work"
+          >
+            TeamWork
+          </div>
+        </div>
+        <div
+          class="grid-item"
+        >
+          <div
+            data-testid="risk-analysis"
+          >
+            RiskAnalysis
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
