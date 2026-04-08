@@ -5,7 +5,7 @@ import './DashboardPage.css';
 
 const DashboardPage: React.FC = () => {
   // Use store data instead of mock data
-  const { projectHealth, codeHealth, teamWork, loading, error, fetchDashboardData } =
+  const { projectHealth, codeHealth, teamWork, riskAnalysis, loading, error, fetchDashboardData } =
     useDashboardStore();
 
   useEffect(() => {
@@ -71,6 +71,13 @@ const DashboardPage: React.FC = () => {
       teamQualityScore: 0,
       teamSaturationScore: 0,
     },
+    riskAnalysis: riskAnalysis || {
+      repository: 'unknown/repo',
+      overall_risk_level: 'unknown',
+      risks: [],
+      mitigations: [],
+      generated_at: '',
+    },
   };
 
   return (
@@ -92,7 +99,7 @@ const DashboardPage: React.FC = () => {
           </div>
 
           <div className="grid-item">
-            <RiskAnalysis projectData={displayData.projectHealth} />
+            <RiskAnalysis riskData={displayData.riskAnalysis} />
           </div>
         </div>
       </div>

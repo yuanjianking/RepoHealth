@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { repoApi } from '../services/api';
-import type { CodeHealth, ProjectHealth, TeamWork } from '../types';
+import type { CodeHealth, ProjectHealth, TeamWork, RiskAnalysis } from '../types';
 
 interface DashboardState {
   // Dashboard data
   projectHealth: ProjectHealth | null;
   codeHealth: CodeHealth | null;
   teamWork: TeamWork | null;
+  riskAnalysis: RiskAnalysis | null;
 
   // UI state
   loading: boolean;
@@ -28,6 +29,7 @@ const useDashboardStore = create<DashboardState>()(
         projectHealth: null,
         codeHealth: null,
         teamWork: null,
+        riskAnalysis: null,
         loading: false,
         lastUpdated: null,
         error: null,
@@ -38,16 +40,18 @@ const useDashboardStore = create<DashboardState>()(
             set({ loading: true, error: null });
 
             // Fetch all data in parallel using fixed repository
-            const [healthRes, codeRes, teamRes] = await Promise.all([
-              repoApi.getHealthOverview('example', 'repo'),
-              repoApi.getCodeHealth('example', 'repo'),
-              repoApi.getTeamWork('example', 'repo'),
+            const [healthRes, codeRes, teamRes, riskRes] = await Promise.all([
+              repoApi.getHealthOverview('yuanjianking', 'RepoHealth'),
+              repoApi.getCodeHealth('yuanjianking', 'RepoHealth'),
+              repoApi.getTeamWork('yuanjianking', 'RepoHealth'),
+              repoApi.getRiskAnalysis('yuanjianking', 'RepoHealth'),
             ]);
 
             set({
               projectHealth: healthRes?.data ?? null,
               codeHealth: codeRes?.data ?? null,
               teamWork: teamRes?.data ?? null,
+              riskAnalysis: riskRes?.data ?? null,
               lastUpdated: new Date().toISOString(),
               error: null,
             });

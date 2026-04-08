@@ -1,5 +1,5 @@
 import axios, { type AxiosResponse } from 'axios';
-import type { CodeHealth, ProjectHealth, TeamWork } from '../types';
+import type { CodeHealth, ProjectHealth, TeamWork, RiskAnalysis } from '../types';
 
 // API configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
@@ -87,5 +87,8 @@ export const repoApi = {
 
   getTeamWork: (owner: string, repo: string) =>
     safeGet<TeamWork>(`/repo/team-work/${owner}/${repo}`),
+
+  getRiskAnalysis: (owner: string, repo: string) =>
+    safeGet<RiskAnalysis>(`/repo/risk-analysis/${owner}/${repo}`),
 
 };

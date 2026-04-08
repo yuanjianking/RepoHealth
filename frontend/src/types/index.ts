@@ -1,4 +1,3 @@
-
 interface ProjectHealth {
   // 项目整体任务统计
   totalIssues: number;
@@ -55,4 +54,20 @@ interface TeamWork {
   teamQualityScore: number;
   teamSaturationScore: number;
 }
-export type { ProjectHealth, CodeHealth, TeamWork };
+
+interface RiskAnalysis {
+  repository: string;
+  overall_risk_level: string;
+  risks: Array<{
+    title: string;
+    probability: string; // 'high' | 'medium' | 'low'
+    impact: string; // 'high' | 'medium' | 'low'
+    description: string;
+  }>;
+  mitigations: Array<{
+    action: string;
+  }>;
+  generated_at: string;
+}
+
+export type { ProjectHealth, CodeHealth, TeamWork, RiskAnalysis };
