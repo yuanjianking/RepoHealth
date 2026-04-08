@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -11,6 +12,7 @@ from app.core.utils import (
     parse_timestamp,
     utc_now,
 )
+from app.services.ai_service import get_ai_service
 
 
 
@@ -177,42 +179,74 @@ class StorageService:
                 }
             ]
 
-        project_health = data.get('projectHealth', {})
-        overall_delay_rate = project_health.get('overallDelayRate', 0.0)
-        quality_score = project_health.get('qualityScore', 0.0)
+        logger = logging.getLogger(__name__)
 
-        if overall_delay_rate > 20 or quality_score < 50:
-            overall_risk_level = 'high'
-        elif overall_delay_rate > 10 or quality_score < 70:
-            overall_risk_level = 'medium'
-        else:
-            overall_risk_level = 'low'
+        try:
+            # Get AI service for analysis
+            ai_service = get_ai_service()
 
-        risks = [
-            {
-                'title': 'Team workload imbalance',
-                'probability': 'high' if overall_delay_rate > 15 else 'medium',
-                'impact': 'high' if quality_score < 70 else 'medium',
-                'description': 'Evaluate task distribution and address delayed work items.',
+            # Generate AI-powered risk analysis
+            ai_analysis = await ai_service.analyze_project_health(data)
+
+            # Ensure we have the expected structure
+            risk_analysis_data = {
+                'overall_risk_level': ai_analysis.get('overall_risk_level', 'unknown'),
+                'risks': ai_analysis.get('risks', []),
+                'mitigations': ai_analysis.get('mitigations', []),
+                'analysis_method': ai_analysis.get('analysis_method', 'ai'),
+                'analysis_summary': ai_analysis.get('analysis_summary', ''),
             }
-        ]
 
-        mitigations = [
-            {'action': 'Improve PR review cadence'},
-            {'action': 'Reduce issue backlog and prioritize delayed tasks'},
-            {'action': 'Monitor team workload and adjust assignments'},
-        ]
+            logger.info(f"Generated AI risk analysis for {repository}: {risk_analysis_data['overall_risk_level']} risk level")
 
-        return [
-            {
-                'data': {
-                    'overall_risk_level': overall_risk_level,
-                    'risks': risks,
-                    'mitigations': mitigations,
-                },
-                'updated_at': dashboard_record.get('updated_at', ''),
-            }
-        ]
+            return [
+                {
+                    'data': risk_analysis_data,
+                    'updated_at': dashboard_record.get('updated_at', ''),
+                }
+            ]
+
+        except Exception as e:
+            logger.error(f"AI analysis failed for {repository}: {e}")
+            # Fallback to simple rule-based analysis
+            project_health = data.get('projectHealth', {})
+            overall_delay_rate = project_health.get('overallDelayRate', 0.0)
+            quality_score = project_health.get('qualityScore', 0.0)
+
+            if overall_delay_rate > 20 or quality_score < 50:
+                overall_risk_level = 'high'
+            elif overall_delay_rate > 10 or quality_score < 70:
+                overall_risk_level = 'medium'
+            else:
+                overall_risk_level = 'low'
+
+            risks = [
+                {
+                    'title': 'Team workload imbalance',
+                    'probability': 'high' if overall_delay_rate > 15 else 'medium',
+                    'impact': 'high' if quality_score < 70 else 'medium',
+                    'description': 'Evaluate task distribution and address delayed work items.',
+                }
+            ]
+
+            mitigations = [
+                {'action': 'Improve PR review cadence'},
+                {'action': 'Reduce issue backlog and prioritize delayed tasks'},
+                {'action': 'Monitor team workload and adjust assignments'},
+            ]
+
+            return [
+                {
+                    'data': {
+                        'overall_risk_level': overall_risk_level,
+                        'risks': risks,
+                        'mitigations': mitigations,
+                        'analysis_method': 'rule_based_fallback',
+                        'analysis_summary': 'Fallback rule-based analysis (AI failed)',
+                    },
+                    'updated_at': dashboard_record.get('updated_at', ''),
+                }
+            ]
 
 
 async def get_storage_service() -> StorageService:

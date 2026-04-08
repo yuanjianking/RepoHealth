@@ -41,10 +41,10 @@ const useDashboardStore = create<DashboardState>()(
 
             // Fetch all data in parallel using fixed repository
             const [healthRes, codeRes, teamRes, riskRes] = await Promise.all([
-              repoApi.getHealthOverview('yuanjianking', 'RepoHealth'),
-              repoApi.getCodeHealth('yuanjianking', 'RepoHealth'),
-              repoApi.getTeamWork('yuanjianking', 'RepoHealth'),
-              repoApi.getRiskAnalysis('yuanjianking', 'RepoHealth'),
+              repoApi.getHealthOverview('example', 'repo'),
+              repoApi.getCodeHealth('example', 'repo'),
+              repoApi.getTeamWork('example', 'repo'),
+              repoApi.getRiskAnalysis('example', 'repo'),
             ]);
 
             set({

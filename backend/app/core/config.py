@@ -21,22 +21,23 @@ class Settings(BaseSettings):
     """
 
     # Application settings
-    app_env: str = Field("development", description="Application environment")
-    app_debug: bool = Field(True, description="Debug mode")
-    app_host: str = Field("0.0.0.0", description="Host to bind to")
-    app_port: int = Field(8000, description="Port to listen on")
+    app_env: str = Field("development", env="APP_ENV", description="Application environment")
+    app_debug: bool = Field(True, env="APP_DEBUG", description="Debug mode")
+    app_host: str = Field("0.0.0.0", env="APP_HOST", description="Host to bind to")
+    app_port: int = Field(8000, env="APP_PORT", description="Port to listen on")
     app_cors_origins: List[str] = Field(
         ["http://localhost:3000", "http://localhost:5173"],
+        env="APP_CORS_ORIGINS",
         description="Allowed CORS origins",
     )
 
     # Data storage settings
-    data_path: Path = Field(Path("./data"), description="Root data directory")
+    data_path: Path = Field(Path("./data"), env="DATA_PATH", description="Root data directory")
 
     # AI integration settings (DeepSeek)
-    deepseek_api_key: Optional[str] = Field(None, description="DeepSeek API key")
-    deepseek_api_base: str = Field("https://api.deepseek.com", description="DeepSeek API base URL")
-    deepseek_model: str = Field("deepseek-chat", description="DeepSeek model name")
+    deepseek_api_key: Optional[str] = Field(None, env="DEEPSEEK_API_KEY", description="DeepSeek API key")
+    deepseek_api_base: str = Field("https://api.deepseek.com", env="DEEPSEEK_API_BASE", description="DeepSeek API base URL")
+    deepseek_model: str = Field("deepseek-chat", env="DEEPSEEK_MODEL", description="DeepSeek model name")
 
     # Derived paths
     @property

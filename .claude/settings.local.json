@@ -87,7 +87,17 @@
       "Bash(.venv/bin/python -m pytest tests/ -xvs)",
       "Bash(.venv/bin/python -m pytest tests/ -x)",
       "Bash(.venv/bin/python -m py_compile app/api/v1/endpoints/webhook.py)",
-      "Bash(netstat -tlnp)"
+      "Bash(netstat -tlnp)",
+      "Bash(python -c \"from app.services.ai_service import AIService; service = AIService\\(\\); print\\(f'AI service available: {service.is_available\\(\\)}'\\)\")",
+      "Bash(.venv/bin/python -c \"import openai; print\\('openai available'\\)\")",
+      "Bash(.venv/bin/python -c \"from app.services.ai_service import AIService; service = AIService\\(\\); print\\(f'AI service available: {service.is_available\\(\\)}'\\)\")",
+      "Bash(find /home/ubuntu/RepoHealth/backend/app -name \"*.py\" -exec grep -l \"risk-analysis\" {} \\\\;)",
+      "Bash(curl -s http://localhost:8000/api/v1/repo/risk-analysis/example/repo)",
+      "Bash(curl -s http://localhost:8000/api/v1/repo/risk-analysis/yuanjianking/RepoHealth)",
+      "Bash(curl -s http://localhost:8000/api/v1/repo/health/yuanjianking/RepoHealth)",
+      "Bash(curl -s http://localhost:5174)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(.venv/bin/python -c ':*)"
     ],
     "additionalDirectories": [
       "/tmp"
