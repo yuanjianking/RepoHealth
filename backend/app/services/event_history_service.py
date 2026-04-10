@@ -16,7 +16,9 @@ EVENT_FILE_MAP = {
     "pull_request": "pull_requests.jsonl",
     "issue_comment": "issue_comments.jsonl",
     "pull_request_review": "pull_request_reviews.jsonl",
+    "pull_request_comment": "pull_request_reviews.jsonl",
     "push": "pushes.jsonl",
+    "create": "creates.jsonl",
 }
 
 
@@ -45,6 +47,13 @@ class EventHistoryService:
         return self.data_root / repo_dir / file_name
 
     def append_event(self, repository: str, event_type: str, payload: Dict[str, Any]) -> None:
+        # 如果是issue_comment事件，检查是否为PR评论
+        if event_type == "issue_comment":
+            issue = payload.get("issue", {})
+            if issue.get("pull_request") is not None:
+                # PR评论，改为pull_request_comment事件类型
+                event_type = "pull_request_comment"
+
         event_file = self._get_event_file_path(repository, event_type)
         # Ensure parent directory exists
         event_file.parent.mkdir(parents=True, exist_ok=True)
@@ -69,8 +78,21 @@ class EventHistoryService:
                 if not text:
                     continue
                 parsed = self._safe_json_loads(text)
-                if parsed:
+                if not parsed:
+                    continue
+                # 过滤事件类型
+                record_event_type = parsed.get("event_type")
+                if record_event_type == event_type:
                     records.append(parsed)
+                # 特殊情况：对于pull_request_comment，也接受issue_comment记录（如果是PR评论）
+                elif event_type == "pull_request_comment" and record_event_type == "issue_comment":
+                    # 检查是否为PR评论
+                    payload = parsed.get("payload", {})
+                    issue = payload.get("issue", {})
+                    if issue.get("pull_request") is not None:
+                        # 将其视为pull_request_comment
+                        parsed["event_type"] = "pull_request_comment"
+                        records.append(parsed)
 
         return records
 

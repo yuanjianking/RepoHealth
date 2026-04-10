@@ -52,21 +52,35 @@ class RepoEventProcessor:
             'prs': {},
             'contributors': {},
             'commits': [],
+            'earliest_timestamp': None,
         }
 
         for event_type, records in history.items():
             for record in records:
                 payload = record.get('payload', {})
+                # 更新最早时间戳
+                received_at = record.get('received_at')
+                if received_at:
+                    received_time = _parse_timestamp(received_at)
+                    if received_time:
+                        if state['earliest_timestamp'] is None or received_time < state['earliest_timestamp']:
+                            state['earliest_timestamp'] = received_time
+
                 if event_type == 'issues':
                     self._process_issues_event(state, payload)
                 elif event_type == 'pull_request':
                     self._process_pull_request_event(state, payload)
                 elif event_type == 'issue_comment':
                     self._process_issue_comment_event(state, payload)
+                elif event_type == 'pull_request_comment':
+                    self._process_issue_comment_event(state, payload)
                 elif event_type == 'pull_request_review':
                     self._process_pull_request_review_event(state, payload)
                 elif event_type == 'push':
                     self._process_push_event(state, payload)
+                elif event_type == 'create':
+                    # 暂时忽略create事件，但记录日志
+                    pass
 
         return state
 
@@ -218,6 +232,23 @@ class RepoEventProcessor:
             'count': commit_count,
         })
 
+        # 收集文件变更信息
+        if 'file_changes' not in state:
+            state['file_changes'] = []
+
+        total_files = 0
+        for commit in commits:
+            added = commit.get('added', [])
+            removed = commit.get('removed', [])
+            modified = commit.get('modified', [])
+
+            # 合并所有变更文件
+            all_files = added + removed + modified
+            total_files += len(all_files)
+            for file_path in all_files:
+                state['file_changes'].append(file_path)
+        print(f"DEBUG: _process_push_event processed {len(commits)} commits, {total_files} files")
+
     def _collect_member_metrics(self, state: Dict[str, Any]) -> List[Dict[str, Any]]:
         member_map: Dict[str, Dict[str, Any]] = {}
         issues = list(state['issues'].values())
@@ -346,7 +377,15 @@ class RepoEventProcessor:
         quality_score = self._calculate_quality_score(merged_prs, total_prs, completed_issues, total_issues)
         saturation_score = self._calculate_saturation_score(pending_issues, open_prs)
         earliest_issue = self._earliest_issue_time(issues)
-        days_since_first_issue = self._calculate_days_since_first_issue(earliest_issue)
+        # 使用最早的事件时间（包括push等）或issue时间
+        earliest_project = state.get('earliest_timestamp')
+        if earliest_issue and earliest_project:
+            earliest = min(earliest_issue, earliest_project)
+        elif earliest_project:
+            earliest = earliest_project
+        else:
+            earliest = earliest_issue
+        days_since_first_issue = self._calculate_days_since_first_issue(earliest)
         overall_delay_rate = self._calculate_delay_rate(delayed_issues, total_issues)
 
         return {
@@ -495,15 +534,18 @@ class RepoEventProcessor:
         """
         计算代码变更类型分布。
 
-        注意：当前实现为占位值，实际实现需要分析提交中的文件路径/扩展名。
-        可以扩展此方法以从提交数据中提取文件信息并分类。
+        基于push事件中的文件变更分析，根据文件扩展名分类：
+        - backend: .py, .java, .go, .c, .cpp, .cs, .rs, .php, .rb, .scala, .kt, .swift
+        - frontend: .js, .ts, .tsx, .jsx, .css, .scss, .less, .sass, .html, .htm, .vue, .svelte
+        - infrastructure: .yml, .yaml, .json, .toml, .ini, .cfg, .conf, Dockerfile, .sh, .bash, .ps1, .gitignore, .env*, docker-compose.*
+        - documentation: .md, .txt, .rst, .adoc, .asciidoc, .tex, .pdf, .doc, .docx
         """
-        # 如果有PR数据，可以基于PR的labels或文件变更进行分析
-        # 暂时返回一个合理的默认分布，假设主要为backend代码
-        total_prs = len(state.get('prs', {}))
-
-        if total_prs == 0:
-            # 无PR数据，返回零分布
+        # 从state中获取文件变更历史
+        file_changes = state.get('file_changes', [])
+        print(f"DEBUG: _calculate_code_change_distribution called, file_changes length: {len(file_changes)}")
+        if not file_changes:
+            # 无文件变更数据，返回零分布
+            print("DEBUG: No file changes, returning zero distribution")
             return {
                 'backend': 0,
                 'frontend': 0,
@@ -511,14 +553,138 @@ class RepoEventProcessor:
                 'documentation': 0,
             }
 
-        # 简单启发式：假设backend项目主要为backend代码
-        # 实际实现应分析文件扩展名（.py, .js, .ts, .yml, .md等）
-        return {
-            'backend': 70,  # 70% backend代码
-            'frontend': 20,  # 20% frontend代码
-            'infrastructure': 5,  # 5% 基础设施代码
-            'documentation': 5,   # 5% 文档
+        # 分类统计
+        category_counts = {
+            'backend': 0,
+            'frontend': 0,
+            'infrastructure': 0,
+            'documentation': 0,
+            'unknown': 0,
         }
+
+        # 定义文件扩展名到分类的映射
+        extension_map = {
+            # backend
+            '.py': 'backend',
+            '.java': 'backend',
+            '.go': 'backend',
+            '.c': 'backend',
+            '.cpp': 'backend',
+            '.cc': 'backend',
+            '.h': 'backend',
+            '.hpp': 'backend',
+            '.cs': 'backend',
+            '.rs': 'backend',
+            '.php': 'backend',
+            '.rb': 'backend',
+            '.scala': 'backend',
+            '.kt': 'backend',
+            '.kts': 'backend',
+            '.swift': 'backend',
+            '.m': 'backend',
+            # frontend
+            '.js': 'frontend',
+            '.jsx': 'frontend',
+            '.ts': 'frontend',
+            '.tsx': 'frontend',
+            '.css': 'frontend',
+            '.scss': 'frontend',
+            '.less': 'frontend',
+            '.sass': 'frontend',
+            '.html': 'frontend',
+            '.htm': 'frontend',
+            '.vue': 'frontend',
+            '.svelte': 'frontend',
+            '.astro': 'frontend',
+            # infrastructure
+            '.yml': 'infrastructure',
+            '.yaml': 'infrastructure',
+            '.json': 'infrastructure',
+            '.toml': 'infrastructure',
+            '.ini': 'infrastructure',
+            '.cfg': 'infrastructure',
+            '.conf': 'infrastructure',
+            '.sh': 'infrastructure',
+            '.bash': 'infrastructure',
+            '.ps1': 'infrastructure',
+            '.bat': 'infrastructure',
+            '.cmd': 'infrastructure',
+            '.gitignore': 'infrastructure',
+            '.dockerignore': 'infrastructure',
+            # documentation
+            '.md': 'documentation',
+            '.txt': 'documentation',
+            '.rst': 'documentation',
+            '.adoc': 'documentation',
+            '.asciidoc': 'documentation',
+            '.tex': 'documentation',
+            '.pdf': 'documentation',
+            '.doc': 'documentation',
+            '.docx': 'documentation',
+            '.rtf': 'documentation',
+        }
+
+        # 特殊文件处理（无扩展名或特殊文件名）
+        special_files = {
+            'Dockerfile': 'infrastructure',
+            'docker-compose.yml': 'infrastructure',
+            'docker-compose.yaml': 'infrastructure',
+            'Makefile': 'infrastructure',
+            'README': 'documentation',
+            'LICENSE': 'documentation',
+            'CHANGELOG': 'documentation',
+        }
+
+        for file_path in file_changes:
+            # 检查是否为特殊文件
+            file_name = file_path.split('/')[-1]
+            if file_name in special_files:
+                category = special_files[file_name]
+                category_counts[category] += 1
+                continue
+
+            # 检查文件扩展名
+            matched = False
+            for ext, category in extension_map.items():
+                if file_path.endswith(ext):
+                    category_counts[category] += 1
+                    matched = True
+                    break
+
+            # 环境文件处理（如.env, .env.local等）
+            if not matched and file_name.startswith('.env'):
+                category_counts['infrastructure'] += 1
+                matched = True
+
+            if not matched:
+                category_counts['unknown'] += 1
+
+        # 计算百分比（忽略unknown类别）
+        total_known = sum(count for cat, count in category_counts.items() if cat != 'unknown')
+        if total_known == 0:
+            return {
+                'backend': 0,
+                'frontend': 0,
+                'infrastructure': 0,
+                'documentation': 0,
+            }
+
+        # 计算百分比并转换为整数
+        distribution = {}
+        for category in ['backend', 'frontend', 'infrastructure', 'documentation']:
+            percentage = (category_counts[category] / total_known) * 100
+            distribution[category] = int(round(percentage))
+
+        # 确保总和为100（处理四舍五入误差）
+        total = sum(distribution.values())
+        if total != 100:
+            # 将误差加到最大的类别中
+            diff = 100 - total
+            if diff != 0:
+                max_category = max(distribution.items(), key=lambda x: x[1])[0]
+                distribution[max_category] += diff
+
+        return distribution
 
     def _earliest_issue_time(self, issues: List[Dict[str, Any]]) -> Optional[datetime]:
         timestamps = [_parse_timestamp(issue.get('created_at')) for issue in issues if issue.get('created_at')]
